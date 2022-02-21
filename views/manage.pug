@@ -1,0 +1,123 @@
+extends layout
+block content
+  .container
+    .page-header
+      h1 Manage Data
+      hr
+    .row  
+      .col-md-12
+        a(href='/upload').btn.btn-success.btn-lg Upload ไฟล์เพิ่ม
+      .col-md-12
+        table.table.table-bordered.table-hover#manage_table
+          thead
+            tr
+              th DATE
+              th BATCH-UUID
+              th FILENAME
+              th QTY
+              th ACTION
+          tbody
+          tfoot
+      .col-md-12
+        .overlay.upload_overlay
+          .spinner-border.text-success(role="status")
+          span.sr-only Loading...
+
+                
+block script
+  script(type="text/javascript").
+      $(function () {
+        var manage_datatable = null;
+        var up_data = !{JSON.stringify(upload_data)};
+        //console.log(up_data);
+        $('.upload_overlay').hide();
+        manage_datatable = $("#manage_table").DataTable({
+          responsive: true, 
+          lengthChange: false, 
+          autoWidth: false,
+          columnDefs: [
+                        {
+                        }
+                    ],
+          data: up_data,
+          order : [[ 0, "desc" ]],
+          columns: [
+             { data : "created_at" ,
+               render: (data) => {
+                 return moment(data).format("YYYY-DD-MM HH:mm:ss");
+               }
+             },
+
+             { data : "uuid"},
+             { data : "original_filename"},
+             { data : "qty"},
+             { data : (_data) => {
+                 var html = '';
+                 if(_data.status == 0 ) html+= '<button class="btn btn-success btn-action" value="' + _data.uuid + '"> Activate </button>';
+                 else if(_data.status == 1) html+= '<button class="btn btn-danger btn-deaction" value="' + _data.uuid + '"> Deactivate </button>';
+                 else if(_data.status == 2) html+= '<button class="btn btn-warning btn-reaction" value="' + _data.uuid + '"> Reactivate </button>';
+                 html+= '<button class="btn btn-default btn-clear-data" value="' + _data.uuid + '"> clear data </button>'
+                 return html;
+               }
+             }
+          ], 
+          createdRow: function (row,_data) {
+              //console.log(_data);
+              $(row).attr('data-uuid', _data.uuid);
+            },
+          initComplete: function() {
+            }
+        })
+        $(".btn-action").on("click", function (event) {
+                var __data = manage_datatable.row($(this).closest("tr")).data();
+                $("button").prop("disabled", true);
+                $('.upload_overlay').show();
+                activate(__data.uuid);
+        });
+        $(".btn-deaction").on("click", function (event) {
+                var __data = manage_datatable.row($(this).closest("tr")).data();
+                $("button").prop("disabled", true);
+                $('.upload_overlay').show();
+                deactivate(__data.uuid);
+        });
+        $(".btn-reaction").on("click", function (event) {
+                var __data = manage_datatable.row($(this).closest("tr")).data();
+                $("button").prop("disabled", true);
+                $('.upload_overlay').show();
+                reactivate(__data.uuid);
+        });
+
+      })  
+      function activate (uuid) {
+        const _post_data = { uuid: uuid };
+        $.post("/manage/activate",
+          _post_data ,
+          function(data, status){
+            $('.upload_overlay').hide();
+            alert("Data Apply!");
+            $("button").prop("disabled", true);
+            location.reload();
+          });
+      }
+      function deactivate (uuid) {
+        const _post_data = { uuid: uuid };
+        $.post("/manage/deactivate",
+          _post_data ,
+          function(data, status){
+            $('.upload_overlay').hide();
+            alert("Data Apply!");
+            $("button").prop("disabled", true);
+            location.reload();
+          });
+      }
+      function reactivate (uuid) {
+        const _post_data = { uuid: uuid };
+        $.post("/manage/reactivate",
+          _post_data ,
+          function(data, status){
+            $('.upload_overlay').hide();
+            alert("Data Apply!");
+            $("button").prop("disabled", true);
+            location.reload();
+          });
+      }

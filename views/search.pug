@@ -1,0 +1,53 @@
+extends layout
+
+block content
+  .container
+    .page-header
+      h1 Search Page
+      hr
+    .row
+      .col
+        form#formSearch
+          .form-group
+            label= title
+            input#keyword.form-control(type='text' name='keyword')
+          .row
+            .col
+              button.btn.btn-primary#btn_search(type='button') Search
+            .col
+              .overlay.search_overlay
+                .spinner-border.text-success(role="status")
+                span.sr-only Loading...
+            .col
+            #result_show
+
+block script
+  script(type="text/javascript").
+    $( document ).ready(function() {
+      $('.search_overlay').hide();
+      $('#keyword').focus();
+      $("#keyword").on("click", function () {
+        $(this).select();
+      });
+    }).on('click','#btn_search', function() {
+      $("#btn_search").attr("disabled", true);
+      $('.upload_overlay').show();
+      let keyword = $('#keyword').val();
+      if(keyword == ''){
+        $('#result_show').text("Need keyword.");
+        $('#keyword').focus();
+        $("#btn_search").removeAttr("disabled"); 
+      } else {
+        $.post('/manage/search',{ keyword : keyword, api_key: 'AFD4543423432B399'}, function(res) {
+          //console.log(res);
+          if(res.message == 'ok') {
+            $('#result_show').text("Result = " + res.message + ", AARX = " + res.aarx);
+          } else {
+            $('#result_show').text("Result = " + res.message);
+          }
+          $('#keyword').focus(); 
+          $("#btn_search").removeAttr("disabled");
+        })
+      }
+    })
+   

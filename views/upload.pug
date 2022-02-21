@@ -1,0 +1,31 @@
+extends layout
+
+block content
+  .container
+    .page-header
+      h1 Upload File
+      hr
+    .row
+      .col
+        form#formUpload(method='post' action='/upload' enctype='multipart/form-data')
+          .form-group
+            label(for='fileupload') Upload
+            input#fileupload.form-control(type='file' name='fileupload' required='')
+          .row
+            .col
+              button.btn.btn-primary(type='submit') Submit
+              button.btn.btn-primary(type='reset') Reset
+              a(href='/manage').btn.btn-info บริหารข้อมูล
+            .col
+              .overlay.upload_overlay
+                .spinner-border.text-success(role="status")
+                span.sr-only Loading...
+
+block script
+  script(type="text/javascript").
+    $( document ).ready(function() {
+      $('.upload_overlay').hide();
+    }).on('submit', function() {
+      $("#button").prop("disabled", true);
+      $('.upload_overlay').show();
+    })

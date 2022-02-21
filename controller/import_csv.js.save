@@ -1,0 +1,39 @@
+//const mongo_client = require('mongodb').MongoClient
+//const manage = require("../model/main.js")
+const csv = require('csv-parser')
+const fs = require('fs')
+var Iconv  = require('iconv').Iconv;
+
+const import_csv = {
+  load_csv: (req,res) => {
+    try {
+      console.log('Load file from = ' + req.connection.remoteAddress);
+      //console.log(req.file);
+      let index = req.file.filename.lastIndexOf('.');
+      var file_ext = (index < 0) ? '' : req.file.filename.substr(index+1);
+      console.log('Get upload file ext = ' + file_ext);
+      if(file_ext != 'csv') {
+        throw new Error('Not CSV file.');
+      } else {
+        var results = [];
+        fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+          console.log(results);
+        });
+        res.render('show_upload', { upfile: req.file })
+      }
+    } catch(err) {
+      console.log(err);
+      res.render('error',{ error: err });
+    }
+  },
+  add_csv: (req,res) => {
+    res.redirect('/upload');
+  },
+  get_status:  function(req, res) {
+      console.log('Get status from = ' + req.connection.remoteAddress);
+  }
+}
+module.exports = import_csv;

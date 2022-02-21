@@ -1,0 +1,17 @@
+extends layout
+block content
+  .container
+    .page-header
+      h1 Upload File
+      hr
+    .row
+      .col-md-12
+        p Filename = 
+          |
+          = upfile.originalname          
+        p Quantity = 
+          |
+          = qty
+        p.text-success DONE!!! 
+        a(href='/upload').btn.btn-success.btn-lg Upload ไฟล์เพิ่ม
+        a(href='/manage').btn.btn-info.btn-lg บริหารข้อมูล

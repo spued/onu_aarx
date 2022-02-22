@@ -9,7 +9,7 @@ const db = mysql.createPool({
     port     : process.env.DB_PORT,
     password : process.env.DB_PASSWORD,
     database : process.env.DB_DATABASE,
-    connectionLimit : 80
+    connectionLimit : 32
   })
 db.getConnection(function(err, connection) {
   if (err) throw err; // not connected!

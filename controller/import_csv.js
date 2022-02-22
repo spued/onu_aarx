@@ -29,7 +29,6 @@ const import_csv = {
                         Transmitted_Optical_Power, Temperature, Voltage, Bias_Current, OLT_Received_Optical_Power ) 
                         VALUES ( ? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )`;
     		console.log('Got results row = ' + results.length);
-
 		results.forEach((ele, ind) => {
                   let _value = Object.values(ele);
                   _value.unshift(uuid);
@@ -37,10 +36,10 @@ const import_csv = {
                   _value[1] = _value[1].replace(/-/g, '_');
                   _value[2] = _value[2].replace(/-/g, '_');
                   _value[3] = _value[3].replace(/-/g, '_');
-
+                  //console.log(_value);
                   db.query(sql, _value , (error, res, fields)=>{
                     if(error) {
-                      throw new Error('DB Insert failed.');
+                      throw new Error('DB Insert failed:');
                     }
                   })
                 })

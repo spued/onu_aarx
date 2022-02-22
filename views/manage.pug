@@ -2,7 +2,7 @@ extends layout
 block content
   .container
     .page-header
-      h1 Manage Data
+      h1.text-info Manage Data V.08_20220222
       hr
     .row  
       .col-md-12
@@ -56,7 +56,8 @@ block script
                  if(_data.status == 0 ) html+= '<button class="btn btn-success btn-action" value="' + _data.uuid + '"> Activate </button>';
                  else if(_data.status == 1) html+= '<button class="btn btn-danger btn-deaction" value="' + _data.uuid + '"> Deactivate </button>';
                  else if(_data.status == 2) html+= '<button class="btn btn-warning btn-reaction" value="' + _data.uuid + '"> Reactivate </button>';
-                 html+= '<button class="btn btn-default btn-clear-data" value="' + _data.uuid + '"> clear data </button>'
+                 if(_data.status >= 1 &&  _data.status <= 2) html+= '<button class="btn btn-default btn-clear-data" value="' + _data.uuid + '"> Clear data </button>';
+                 if(_data.status == 3) html+= '<i class="text-info">เคลียร์ข้อมูลแล้ว</i>';
                  return html;
                }
              }
@@ -64,6 +65,7 @@ block script
           createdRow: function (row,_data) {
               //console.log(_data);
               $(row).attr('data-uuid', _data.uuid);
+              $(row).attr('filename', _data.filename);
             },
           initComplete: function() {
             }
@@ -86,6 +88,12 @@ block script
                 $('.upload_overlay').show();
                 reactivate(__data.uuid);
         });
+        $(".btn-clear-data").on("click", function (event) {
+                var __data = manage_datatable.row($(this).closest("tr")).data();
+                $("button").prop("disabled", true);
+                $('.upload_overlay').show();
+                clear_data(__data.uuid, __data.filename);
+        });
 
       })  
       function activate (uuid) {
@@ -94,7 +102,7 @@ block script
           _post_data ,
           function(data, status){
             $('.upload_overlay').hide();
-            alert("Data Apply!");
+            alert("เริ่มใช้ข้อมูลแล้ว!");
             $("button").prop("disabled", true);
             location.reload();
           });
@@ -105,7 +113,7 @@ block script
           _post_data ,
           function(data, status){
             $('.upload_overlay').hide();
-            alert("Data Apply!");
+            alert("เอาข้อมูลออกแล้ว!");
             $("button").prop("disabled", true);
             location.reload();
           });
@@ -116,8 +124,28 @@ block script
           _post_data ,
           function(data, status){
             $('.upload_overlay').hide();
-            alert("Data Apply!");
+            alert("เริ่มใช้ข้อมูลแล้ว!");
             $("button").prop("disabled", true);
             location.reload();
           });
       }
+      function clear_data (uuid, filename) {
+        if (confirm("ต้องการลบข้อมูล?") == true) {
+          const _post_data = { 
+            uuid: uuid,
+            fn: filename 
+          };
+          $.post("/manage/clear_data",
+            _post_data ,
+            function(data, status){
+              $('.upload_overlay').hide();
+              alert("เคลียร์ข้อมูลแล้ว!");
+              $("button").prop("disabled", true);
+              location.reload();
+            });
+        } else {
+          $("button").prop("disabled", true);
+          location.reload();
+        }
+      }
+

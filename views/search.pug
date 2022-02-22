@@ -41,7 +41,7 @@ block script
         $.post('/manage/search',{ keyword : keyword, api_key: 'AFD4543423432B399'}, function(res) {
           //console.log(res);
           if(res.message == 'ok') {
-            $('#result_show').text("Result = " + res.message + ", AARX = " + res.aarx);
+            $('#result_show').text("Result = " + res.message + ", MIN_RX = " + res.minrx + ", AARX = " + res.aarx);
           } else {
             $('#result_show').text("Result = " + res.message);
           }
@@ -50,4 +50,10 @@ block script
         })
       }
     })
-   
+    var input = document.getElementById("btn_search");
+    input.addEventListener("keyup", function(event) {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        $("#btn_search").trigger('click');
+      }
+    });

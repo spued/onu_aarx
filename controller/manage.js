@@ -3,6 +3,7 @@
 const db = require('../config/db')
 const moment = require('moment');
 const _ = require('lodash');
+const fs = require('fs');
 
 const manage_data = {
   search:(req,res) => {
@@ -18,7 +19,7 @@ const manage_data = {
            console.log("--Got NRSSP = " + NRSSP);
            db.query("SELECT * from aarx_status WHERE NRSSP = '"+NRSSP+"' AND status = 1 LIMIT 1",(err,_result) => {
              if(_result.length > 0) {
-               console.log("--Got AARX = " +_result[0].aarx);
+               console.log("-- Got AARX = " +_result[0].aarx + " min RX = " + _result[0].min_rx );
                res.json({ message: 'ok', minrx :  _result[0].min_rx , aarx : _result[0].aarx });
              } else {
                res.json({ message: 'ok', minrx :  0 , aarx : 0 });
@@ -36,7 +37,7 @@ const manage_data = {
     try {
       console.log('WEB: Load Data from IP = ' + req.connection.remoteAddress);
       var results = [];
-      let sql = "SELECT uuid, original_filename, qty ,status , created_at from aarx_master ORDER BY created_at DESC LIMIT 20";
+      let sql = "SELECT uuid, original_filename, filename , qty , status , created_at from aarx_master ORDER BY created_at DESC LIMIT 25";
       db.query(sql, [req.params.id], (error, results, fields) =>{
         if (error) throw error;
         // results เป็น array ของข้อมูลผลลัพธ์
@@ -48,6 +49,25 @@ const manage_data = {
       console.log(err);
       res.render('error',{ error: err });
     }
+  },
+   clear_data: (req,res) => {
+    const uuid = req.body.uuid;
+    const fn = './public/uploads/' + req.body.fn;
+    console.log("Clear data for UUID = " + uuid);
+    db.query("DELETE from import_data WHERE uuid ='" + uuid + "'", (err, results) => {
+      if(err) {
+        res.json({ code: 1, message: 'Delete failed.'});
+      } else {
+        db.query("UPDATE aarx_master SET status = 3 WHERE uuid ='" + uuid + "'", (err, results) => {
+          fs.unlink(fn, function (err) {
+            if (err) throw err;
+            // if no error, file has been deleted successfully
+            console.log('-- File deleted = ' + fn);
+          });
+          res.json({ code: 0, message: 'ok' });
+        })
+      }
+    })
   },
   process_data: (req,res) => {
     res.redirect('/manage');
@@ -188,6 +208,10 @@ const manage_data = {
                if(max_distance == '--') max_distance  =0;
                if(min_distance == '--') min_distance  =0;
                if(avg_distance == '--') avg_distance  =0;
+
+               if(max_rx == '--') max_rx  = 0.00;
+               if(min_rx == '--') min_rx  = 0.00;
+               if(aarx == '--') aarx  = 0.00;
 
                _data.push(master_id);
                _data.push(_val);

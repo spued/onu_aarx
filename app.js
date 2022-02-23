@@ -10,20 +10,21 @@ var uploadRouter = require('./routes/upload');
 var manageRouter = require('./routes/manage');
 
 
-var myenv = require('dotenv').config();
+var dotenv = require('dotenv').config();
 var app = express();
 
-if (myenv.error) {
+if (dotenv.error) {
   throw result.error
 }
 
-//console.log(myenv.parsed)
-
+//console.log(dotenv.parsed)
+console.log('Start with env = ' + process.env.NODE_ENV);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(logger('dev'));
+if(process.env.NODE_ENV == 'development') app.use(logger('dev'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

@@ -9,4 +9,5 @@ router.post('/deactivate', manage.deactivate);
 router.post('/reactivate', manage.reactivate);
 router.post('/search', manage.search);
 router.post('/clear_data', manage.clear_data);
+router.post('/delete_data', manage.delete_data);
 module.exports = router;

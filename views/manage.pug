@@ -2,17 +2,18 @@ extends layout
 block content
   .container
     .page-header
-      h1.text-info Manage Data V.08_20220222
+      h1.text-info Manage Data V.08_20220223
       hr
     .row  
       .col-md-12
         a(href='/upload').btn.btn-success.btn-lg Upload ไฟล์เพิ่ม
+        a(href='/search').btn.btn-success.btn-lg ลอง Search
       .col-md-12
         table.table.table-bordered.table-hover#manage_table
           thead
             tr
               th DATE
-              th BATCH-UUID
+              th BATCH-ID
               th FILENAME
               th QTY
               th ACTION
@@ -47,8 +48,12 @@ block script
                  return moment(data).format("YYYY-DD-MM HH:mm:ss");
                }
              },
-
-             { data : "uuid"},
+             { 
+               data : {},
+               render: function(data) {
+                  return data.id + ' - ' + data.uuid;
+               }
+             },
              { data : "original_filename"},
              { data : "qty"},
              { data : (_data) => {
@@ -57,7 +62,8 @@ block script
                  else if(_data.status == 1) html+= '<button class="btn btn-danger btn-deaction" value="' + _data.uuid + '"> Deactivate </button>';
                  else if(_data.status == 2) html+= '<button class="btn btn-warning btn-reaction" value="' + _data.uuid + '"> Reactivate </button>';
                  if(_data.status >= 1 &&  _data.status <= 2) html+= '<button class="btn btn-default btn-clear-data" value="' + _data.uuid + '"> Clear data </button>';
-                 if(_data.status == 3) html+= '<i class="text-info">เคลียร์ข้อมูลแล้ว</i>';
+                 if(_data.status == 3) 
+                   html+= '<i class="text-info">เคลียร์ข้อมูลแล้ว</i><button class="btn btn-danger btn-del-data" value="' + _data.uuid + '"> DELETE data </button>';
                  return html;
                }
              }
@@ -74,7 +80,7 @@ block script
                 var __data = manage_datatable.row($(this).closest("tr")).data();
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
-                activate(__data.uuid);
+                activate(__data.uuid, __data.id);
         });
         $(".btn-deaction").on("click", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
@@ -92,12 +98,21 @@ block script
                 var __data = manage_datatable.row($(this).closest("tr")).data();
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
-                clear_data(__data.uuid, __data.filename);
+                clear_data(__data.uuid, __data.id,  __data.filename);
+        });
+        $(".btn-del-data").on("click", function (event) {
+                var __data = manage_datatable.row($(this).closest("tr")).data();
+                $("button").prop("disabled", true);
+                $('.upload_overlay').show();
+                delete_data(__data.uuid , __data.id);
         });
 
       })  
-      function activate (uuid) {
-        const _post_data = { uuid: uuid };
+      function activate (uuid, id) {
+        const _post_data = { 
+          uuid: uuid,
+          master_id: id 
+        };
         $.post("/manage/activate",
           _post_data ,
           function(data, status){
@@ -129,10 +144,11 @@ block script
             location.reload();
           });
       }
-      function clear_data (uuid, filename) {
+      function clear_data (uuid, id, filename) {
         if (confirm("ต้องการลบข้อมูล?") == true) {
           const _post_data = { 
             uuid: uuid,
+            master_id: id,
             fn: filename 
           };
           $.post("/manage/clear_data",
@@ -140,6 +156,25 @@ block script
             function(data, status){
               $('.upload_overlay').hide();
               alert("เคลียร์ข้อมูลแล้ว!");
+              $("button").prop("disabled", true);
+              location.reload();
+            });
+        } else {
+          $("button").prop("disabled", true);
+          location.reload();
+        }
+      }
+      function delete_data (uuid, id) {
+        if (confirm("ต้องการลบข้อมูลทั้งหมด?") == true) {
+          const _post_data = {
+            uuid: uuid,
+            master_id: id
+          };
+          $.post("/manage/delete_data",
+            _post_data ,
+            function(data, status){
+              $('.upload_overlay').hide();
+              alert("ลบข้อมูลแล้ว!");
               $("button").prop("disabled", true);
               location.reload();
             });

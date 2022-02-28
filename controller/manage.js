@@ -16,10 +16,10 @@ const manage_data = {
          //console.log(result);
          if(result.length > 0) {
            let NRSSP = result[0].NE_Name + '-' + result[0].Rack + '-' + result[0].Shelf + '-' + result[0].Slot + '-' + result[0].Port;
-           console.log("--Got NRSSP = " + NRSSP);
+           console.log("-- Got NRSSP = " + NRSSP);
            db.query("SELECT * from aarx_status WHERE NRSSP = '"+NRSSP+"' AND status = 1 LIMIT 1",(err,_result) => {
              if(_result.length > 0) {
-               console.log("-- Got AARX = " +_result[0].aarx + " min RX = " + _result[0].min_rx );
+               console.log("-- Got AARX = " +_result[0].aarx + " MINRX = " + _result[0].min_rx );
                res.json({ message: 'ok', minrx :  _result[0].min_rx , aarx : _result[0].aarx });
              } else {
                res.json({ message: 'ok', minrx :  0 , aarx : 0 });
@@ -35,9 +35,9 @@ const manage_data = {
   },
   load_data: (req,res) => {
     try {
-      console.log('WEB: Load Data from IP = ' + req.connection.remoteAddress);
+      console.log('WEB: Load master data from IP = ' + req.connection.remoteAddress);
       var results = [];
-      let sql = "SELECT uuid, original_filename, filename , qty , status , created_at from aarx_master ORDER BY created_at DESC LIMIT 25";
+      let sql = "SELECT id, uuid, original_filename, filename , qty , status , created_at from aarx_master ORDER BY created_at DESC LIMIT 25";
       db.query(sql, [req.params.id], (error, results, fields) =>{
         if (error) throw error;
         // results เป็น array ของข้อมูลผลลัพธ์
@@ -52,20 +52,35 @@ const manage_data = {
   },
    clear_data: (req,res) => {
     const uuid = req.body.uuid;
+    const master_id = req.body.master_id;
     const fn = './public/uploads/' + req.body.fn;
     console.log("Clear data for UUID = " + uuid);
-    db.query("DELETE from import_data WHERE uuid ='" + uuid + "'", (err, results) => {
+    db.query("DELETE from import_data WHERE master_id =" + master_id, (err, results) => {
       if(err) {
         res.json({ code: 1, message: 'Delete failed.'});
       } else {
         db.query("UPDATE aarx_master SET status = 3 WHERE uuid ='" + uuid + "'", (err, results) => {
           fs.unlink(fn, function (err) {
-            if (err) throw err;
+            if (err) console.log('-- File error = ' + err);
             // if no error, file has been deleted successfully
             console.log('-- File deleted = ' + fn);
           });
           res.json({ code: 0, message: 'ok' });
         })
+      }
+    })
+  },
+  delete_data: (req,res) => {
+    const uuid = req.body.uuid;
+    const master_id = req.body.master_id;
+    console.log("Controller: DELETE data for UUID = " + uuid);
+    db.query("DELETE from aarx_status WHERE master_id = " + master_id, (err, _res) => {
+      if(err) {
+        console.log('DELETE Error: ' + err);
+        res.json({ code: 1, message: 'failed' });
+      } else {
+        db.query("DELETE from aarx_master WHERE uuid ='" + uuid + "'");
+        res.json({ code: 0, message: 'ok' });
       }
     })
   },
@@ -115,20 +130,21 @@ const manage_data = {
   },
   activate: async (req,res) => {
     //console.log(req);
-    console.log("WEB: GET activate request for uuid" + req.body.uuid);
+    console.log("WEB: GET activate request for id = " + req.body.master_id);
     const uuid = req.body.uuid;
     var NRSSP = [];
-    var master_id = null;
+    var master_id = req.body.master_id;;
     await db.query("SELECT id, status from aarx_master WHERE uuid ='" + uuid + "'", (err, results) => { 
         //console.log(results);
         master_id = results[0].id;
         console.log("Master = " + master_id);
-        return 0;
+        return results[0];
     });
-    let sql = "SELECT * from import_data WHERE uuid ='" + uuid + "'";
     try {
       console.log('Load Data from IP = ' + req.connection.remoteAddress);
       var results = [];
+      let sql = "SELECT * from import_data WHERE master_id = " + master_id;
+      console.log(sql);
       db.query(sql, (error, results, fields) =>{
         if (error) throw error;
         console.log("Found records = " + results.length);
@@ -180,8 +196,8 @@ const manage_data = {
                                                          "AVG(ONU_ranging) as avg_distance, " +
                                                          "MIN(ONU_ranging) as min_distance, " +
                                                          "MAX(ONU_ranging) as max_distance " + 
-                                   "FROM import_data WHERE uuid = '"
-                                   + uuid + "' AND NE_Name = '"
+                                   "FROM import_data WHERE master_id = "
+                                   + master_id + " AND NE_Name = '"
                                    + v[0] +"'  AND Rack = " 
                                    + v[1] +"  AND Shelf = " 
                                    + v[2] +"  AND Slot = "
@@ -242,7 +258,7 @@ const manage_data = {
           //console.log("Total NE_Name = " + NRSSP.length);
         } else {
         }
-        _sql = "UPDATE aarx_master SET status = 1 WHERE id = " +master_id;
+        _sql = "UPDATE aarx_master SET status = 1 WHERE id = " + master_id;
         db.query(_sql,(err,res) => {});
         res.json({ title: 'Activate Data', message: 'ok' });
       })

@@ -76,31 +76,32 @@ block script
           initComplete: function() {
             }
         })
-        $(".btn-action").on("click", function (event) {
+        $("#manage_table tbody").on("click",".btn-action", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
+                //console.log(__data);
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
                 activate(__data.uuid, __data.id);
         });
-        $(".btn-deaction").on("click", function (event) {
+        $("#manage_table tbody").on("click",".btn-deaction", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
                 deactivate(__data.uuid);
         });
-        $(".btn-reaction").on("click", function (event) {
+        $("#manage_table tbody").on("click",".btn-reaction", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
                 reactivate(__data.uuid);
         });
-        $(".btn-clear-data").on("click", function (event) {
+        $("#manage_table tbody").on("click",".btn-clear-data", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
                 clear_data(__data.uuid, __data.id,  __data.filename);
         });
-        $(".btn-del-data").on("click", function (event) {
+        $("#manage_table tbody").on("click",".btn-del-data", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();

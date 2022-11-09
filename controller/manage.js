@@ -19,10 +19,10 @@ const manage_data = {
            console.log("-- Got NRSSP = " + NRSSP);
            db.query("SELECT * from aarx_status WHERE NRSSP = '"+NRSSP+"' AND status = 1 LIMIT 1",(err,_result) => {
              if(_result.length > 0) {
-               console.log("-- Got AARX = " +_result[0].aarx + " MINRX = " + _result[0].min_rx );
-               res.json({ message: 'ok', minrx :  _result[0].min_rx , aarx : _result[0].aarx });
+               console.log("-- Got AARX = " +_result[0].aarx + " MINRX = " + _result[0].min_rx  + " MAXRX = " + _result[0].max_rx + " A_DISTANCE = " + _result[0].avg_distance);
+               res.json({ message: 'ok',  avg_distance: _result[0].avg_distance, maxrx :  _result[0].max_rx , minrx :  _result[0].min_rx , aarx : _result[0].aarx });
              } else {
-               res.json({ message: 'ok', minrx :  0 , aarx : 0 });
+               res.json({ message: 'ok', avg_distance: 0, maxrx: 0 , minrx :  0 , aarx : 0 });
              }
            })
          } else {

@@ -29,36 +29,39 @@ const import_csv = {
                                          + "', '" + req.file.originalname
                                          + "')" ;
                 //console.log(sql);
+                /**/
                 db.query(sql, (error, result) => {
                   let master_id = result.insertId;
-                  sql = `INSERT INTO import_data ( 
-                        master_id, Location_Path, NE_Name, NE_IP, NE_Type, Rack, Shelf, Slot, Port, ONU_ID, 
-                        Name, ONU_Configured_Type, Vendor_Name, ONU_Ranging, Service_Type, Administrative_Status,Operational_Status, 
-                        Authentication_Mode, Authentication_Value,  MAC_SN, Installation_Date, Received_Optical_Power, 
-                        Transmitted_Optical_Power, Temperature, Voltage, Bias_Current, OLT_Received_Optical_Power ) 
-                        VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                  sql = `INSERT INTO import_data (master_id, Location_Path, NE_Name, NE_IP, NE_Type, Rack, Shelf, Slot, Port, ONU_ID, 
+                    Name, ONU_Configured_Type, Vendor_Name, ONU_Ranging, Service_Type, Administrative_Status,Operational_Status, 
+                    Authentication_Mode, Authentication_Value,  MAC_SN, Installation_Date, Received_Optical_Power, 
+                    Transmitted_Optical_Power, Temperature, Voltage, Bias_Current, OLT_Received_Optical_Power )
+                        VALUES ( ` + master_id + `,?, ?, ?, ?, ?, ?, ?, ?, ?, 
                                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                                  ?, ?, ?, ?, ?, ?, ? )`;
     		  console.log('-- Got results row = ' + results.length);
-		  results.forEach((ele, ind) => {
+          var nc_data = 0;
+		  results.forEach((ele) => {
                     if(ele['Receive Optical Power(dBm)'] != '--') {
                       let _value = Object.values(ele);
-                      _value.unshift(master_id);
+                      //_value.unshift(master_id);
                       // patch some data to remove dash -
+                      _value[0] = _value[0].replace(/-/g, '_');
                       _value[1] = _value[1].replace(/-/g, '_');
                       _value[2] = _value[2].replace(/-/g, '_');
-                      _value[3] = _value[3].replace(/-/g, '_');
                       //console.log(_value);
-                      db.query(sql, _value , (error, _res, fields )=>{
+                      db.query(sql, _value , (error, _res, fields)=>{
                         if(error) {
-                          console.log('-- DB Insert failed:' +  fields);
+                          console.log('-- DB Insert failed:' +  error);
                         }
                       })
                     } else {
-                      console.log('-- This value can not insert' + ele);
+                      //console.log('-- This value can not insert ' + ele['MAC/SN']);
+                      nc_data++;
                     }
                   })
-                  res.render('show_upload', { upfile: req.file, qty : results.length });
+                  db.query("UPDATE aarx_master SET remark = '"+ nc_data + "' WHERE id = " + master_id);
+                  res.render('show_upload', { upfile: req.file, qty : results.length, nc: nc_data });
                 })
   	});
       }

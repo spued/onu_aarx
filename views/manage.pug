@@ -2,12 +2,12 @@ extends layout
 block content
   .container
     .page-header
-      h1.text-info Manage Data V.08_20220223
+      h1.text-info Manage Data V.0.9.0 20230221
       hr
     .row  
       .col-md-12
-        a(href='/upload').btn.btn-success.btn-lg Upload ไฟล์เพิ่ม
-        a(href='/search').btn.btn-success.btn-lg ลอง Search
+        a(href='/upload').btn.btn-success.btn-lg.mr-2 Upload data file
+        a(href='/search').btn.btn-success.btn-lg Test search
       .col-md-12
         table.table.table-bordered.table-hover#manage_table
           thead
@@ -16,6 +16,7 @@ block content
               th BATCH-ID
               th FILENAME
               th QTY
+              th FAILED
               th ACTION
           tbody
           tfoot
@@ -56,14 +57,18 @@ block script
              },
              { data : "original_filename"},
              { data : "qty"},
+             { data : "remark"},
              { data : (_data) => {
                  var html = '';
-                 if(_data.status == 0 ) html+= '<button class="btn btn-success btn-action" value="' + _data.uuid + '"> Activate </button>';
-                 else if(_data.status == 1) html+= '<button class="btn btn-danger btn-deaction" value="' + _data.uuid + '"> Deactivate </button>';
-                 else if(_data.status == 2) html+= '<button class="btn btn-warning btn-reaction" value="' + _data.uuid + '"> Reactivate </button>';
-                 if(_data.status >= 1 &&  _data.status <= 2) html+= '<button class="btn btn-default btn-clear-data" value="' + _data.uuid + '"> Clear data </button>';
+                 if(_data.status == 0 ) {
+                    html+= '<button class="btn btn-success btn-action mr-2" value="' + _data.uuid + '"> Activate </button>';
+                    html+= '<button class="btn btn-danger btn-cancel" value="' + _data.uuid + '"> Cancel </button>';
+                  }
+                 else if(_data.status == 1) html+= '<button class="btn btn-danger btn-deaction mr-2" value="' + _data.uuid + '"> Deactivate </button>';
+                 else if(_data.status == 2) html+= '<button class="btn btn-warning btn-reaction mr-2" value="' + _data.uuid + '"> Reactivate </button>';
+                 if(_data.status >= 1 &&  _data.status <= 2) html+= '<button class="btn btn-default btn-clear-data mr-2" value="' + _data.uuid + '"> Clear data </button>';
                  if(_data.status == 3) 
-                   html+= '<i class="text-info">เคลียร์ข้อมูลแล้ว</i><button class="btn btn-danger btn-del-data" value="' + _data.uuid + '"> DELETE data </button>';
+                   html+= '<i class="text-info">--CLEARED--</i><button class="btn btn-danger btn-del-data" value="' + _data.uuid + '"> DELETE data </button>';
                  return html;
                }
              }
@@ -82,6 +87,13 @@ block script
                 $("button").prop("disabled", true);
                 $('.upload_overlay').show();
                 activate(__data.uuid, __data.id);
+        });
+        $("#manage_table tbody").on("click",".btn-cancel", function (event) {
+                var __data = manage_datatable.row($(this).closest("tr")).data();
+                //console.log(__data);
+                $("button").prop("disabled", true);
+                $('.upload_overlay').show();
+                cancel(__data.uuid, __data.id);
         });
         $("#manage_table tbody").on("click",".btn-deaction", function (event) {
                 var __data = manage_datatable.row($(this).closest("tr")).data();
@@ -123,6 +135,25 @@ block script
             location.reload();
           });
       }
+      function cancel (uuid, id) {
+        if(confirm('Data will delete.')) {
+          const _post_data = { 
+            uuid: uuid,
+            master_id: id 
+          };
+          $.post("/manage/cancel",
+            _post_data ,
+            function(data, status){
+              $('.upload_overlay').hide();
+              alert("data cancel!");
+              $("button").prop("disabled", true);
+              location.reload();
+            });
+          } else {
+            return 0;
+          }
+        } 
+        
       function deactivate (uuid) {
         const _post_data = { uuid: uuid };
         $.post("/manage/deactivate",

@@ -9,7 +9,8 @@ var usersRouter = require('./routes/users');
 var uploadRouter = require('./routes/upload');
 var manageRouter = require('./routes/manage');
 
-
+const data_collector = require('./controller/data_collector')
+const mainCron = require("node-cron");
 var dotenv = require('dotenv').config();
 var app = express();
 
@@ -23,7 +24,13 @@ console.log('Start with env = ' + process.env.NODE_ENV);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-if(process.env.NODE_ENV == 'development') app.use(logger('dev'));
+if(process.env.NODE_ENV == 'development') 
+  app.use(logger('dev', {
+    skip: function (req, res) { 
+      return req.originalUrl.startsWith('/adminlte'); 
+    }
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -40,6 +47,16 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
+const nightly = mainCron.schedule("5 23 * * *", () => {
+  // run db schedule here
+  console.log('Cron : run nigthly update nightly : ' + new Date().toLocaleString());
+  data_collector.update_prefix_master();
+});
+
+const nightly_update = mainCron.schedule("*/1 * * * *", () => {
+  console.log('Cron : run data update minutes : ' + new Date().toLocaleString());
+  //data_collector.update_prefix_history_data();
+})
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development

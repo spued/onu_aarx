@@ -1,6 +1,6 @@
 //const mongo_client = require('mongodb').MongoClient
 //const manage = require("../model/main.js")
-const db = require('../config/db')
+const db = require('../config/db');
 const moment = require('moment');
 const _ = require('lodash');
 const fs = require('fs');
@@ -37,7 +37,7 @@ const manage_data = {
     try {
       console.log('WEB: Load master data from IP = ' + req.connection.remoteAddress);
       var results = [];
-      let sql = "SELECT id, uuid, original_filename, filename , qty , status , created_at from aarx_master ORDER BY created_at DESC LIMIT 25";
+      let sql = "SELECT id, uuid, original_filename, filename , qty , remark, status , created_at from aarx_master ORDER BY created_at DESC LIMIT 25";
       db.query(sql, [req.params.id], (error, results, fields) =>{
         if (error) throw error;
         // results เป็น array ของข้อมูลผลลัพธ์
@@ -50,7 +50,7 @@ const manage_data = {
       res.render('error',{ error: err });
     }
   },
-   clear_data: (req,res) => {
+  clear_data: (req,res) => {
     const uuid = req.body.uuid;
     const master_id = req.body.master_id;
     const fn = './public/uploads/' + req.body.fn;
@@ -266,6 +266,32 @@ const manage_data = {
       console.log(err);
       res.json({ error: err });
     }
+  },
+  cancel_data: (req,res) => {
+    const uuid = req.body.uuid;
+    const master_id = req.body.master_id;
+    console.log("Controller: Cancel data DELETE data for UUID = " + uuid);
+    db.query("DELETE from aarx_status WHERE master_id = " + master_id, (err, _res) => {
+      if(err) {
+        console.log('DELETE Error: ' + err);
+        res.json({ code: 1, message: 'failed' });
+      } else {
+        db.query("DELETE from aarx_master WHERE uuid ='" + uuid + "'",(err, _res) => {
+          if(err) {
+            console.log('DELETE Error: ' + err);
+            res.json({ code: 1, message: 'failed' });
+          } else {
+            db.query("DELETE from import_data WHERE master_id = " + master_id,(err, _res) => {
+              if(err) {
+                res.json({ code: 1, message: 'failed' });
+              } else {
+                res.json({ code: 0, message: 'ok' });
+              }
+            });
+          }
+        });
+      }
+    })
   }
 }
 module.exports = manage_data;
